@@ -30,6 +30,94 @@ async function getallJob(request,response){
          response.json(err)
      }
 }
+async function getCustomers(request,response){
+    console.log("here")
+    try{
+        var column = '*'
+        var table = 'USERS'
+    // const data = await dbClient.raw('select ' + column +' from '+table);
+    const data = await dbClient('CUSTOMERS').select();
+//ad-hoc request
+    // const data = await dbClient('CUSTOMERS').join('SALES','CUSTOMERS.CUST_ID','=','SALES.CUST_ID').
+    // select('CUST_FIRST_NAME','CUST_LAST_NAME','CUST_MAIN_PHONE_NUMBER','AMOUNT_SOLD')
+    // .orderBy('SALES.AMOUNT_SOLD', 'DESC').limit(10);
+     response.json(
+         data
+     )
+    }
+     catch(err){
+         response.json(err)
+     }
+}
+async function getSales(request,response){
+    console.log("here")
+    try{
+        var column = '*'
+        var table = 'USERS'
+    // const data = await dbClient.raw('select ' + column +' from '+table);
+    const data = await dbClient('SALES').sum('AMOUNT_SOLD as amount');
+//ad-hoc request
+    // const data = await dbClient('CUSTOMERS').join('SALES','CUSTOMERS.CUST_ID','=','SALES.CUST_ID').
+    // select('CUST_FIRST_NAME','CUST_LAST_NAME','CUST_MAIN_PHONE_NUMBER','AMOUNT_SOLD')
+    // .orderBy('SALES.AMOUNT_SOLD', 'DESC').limit(10);
+     response.json(
+         data
+     )
+    }
+     catch(err){
+         response.json(err)
+     }
+}
+async function getQuantitySales(request,response){
+    console.log("here")
+    try{
+        var column = '*'
+        var table = 'USERS'
+    // const data = await dbClient.raw('select ' + column +' from '+table);
+    const data = await dbClient('SALES').sum('QUANTITY_SOLD as quantity');
+//ad-hoc request
+
+    // const data = await dbClient('CUSTOMERS').join('SALES','CUSTOMERS.CUST_ID','=','SALES.CUST_ID').
+    // select('CUSTOMERS.CUST_FIRST_NAME || ' ' || CUSTOMERS.CUST_LAST_NAME','CUSTOMERS.CUST_MAIN_PHONE_NUMBER'). Sum('AMOUNT_SOLD')
+   // .groupBy('CUSTOMERS.CUST_FIRST_NAME','CUSTOMERS.CUST_LAST_NAME','SALES.CUST_ID')
+    // .orderBy('SALES.AMOUNT_SOLD', 'DESC').limit(10);
+     response.json(
+         data
+     )
+    }
+     catch(err){
+         response.json(err)
+     }
+    }
+     async function getImportantSales(request,response){
+         console.log("here")
+         try{
+             var column = '*'
+             var table = 'USERS'
+         // const data = await dbClient.raw('select ' + column +' from '+table);
+        //  const data = await dbClient('SALES').sum('QUANTITY_SOLD as quantity');
+     //ad-hoc request
+     
+         const data = await dbClient('CUSTOMERS').join('SALES','CUSTOMERS.CUST_ID','=','SALES.CUST_ID').
+         select('CUSTOMERS.CUST_FIRST_NAME  ',' CUSTOMERS.CUST_LAST_NAME ' ,'CUSTOMERS.CUST_MAIN_PHONE_NUMBER')
+        .groupBy('CUSTOMERS.CUST_FIRST_NAME','CUSTOMERS.CUST_LAST_NAME', 'CUSTOMERS.CUST_MAIN_PHONE_NUMBER','SALES.CUST_ID')
+        .sum('SALES.AMOUNT_SOLD as amt')
+         .orderBy('amt', 'DESC')
+         .limit(10);
+
+         
+    // const data = await dbClient('CUSTOMERS').join('SALES','CUSTOMERS.CUST_ID','=','SALES.CUST_ID').
+    // select('CUST_FIRST_NAME','CUST_LAST_NAME','CUST_MAIN_PHONE_NUMBER','AMOUNT_SOLD')
+    // .orderBy('SALES.AMOUNT_SOLD', 'DESC').limit(10);
+          response.json(
+              data
+          )
+         }
+          catch(err){
+              response.json(err)
+          }
+}
+
 async function deleteJob(request,response){
     try{
         const id = request.body.id;
@@ -111,8 +199,8 @@ async function authenticate(request, response, next) {
     }
     else {
         const dbpassword = data.password;
-        console.log(dbpassword[0].password)
-        // const isMatch = bcrypt.compareSync(authpassword, dbpassword)
+        // const dbpassword = "shiva"; 
+        // console.log(dbpassword[0].password)
         if (authpassword == dbpassword) {
             // if('shiva'=='shiva'){ //comment this line for online connection
             const token = jwt.sign({ username: authusername }, 'secret');
@@ -124,7 +212,7 @@ async function authenticate(request, response, next) {
         }
         else {
             response.json({
-                status: 'false',
+                success: 'false',
                 message: 'Invalid Credentials!!'
             })
         }
@@ -137,6 +225,10 @@ express.post('/api/v1/job', insertJob);
 express.delete('/api/v1/job', deleteJob);
 express.put('/api/v1/job', editJob);
 express.post('/login', cors(), authenticate);
+express.get('/api/job/customers', getCustomers);
+express.get('/api/job/sales', getSales);
+express.get('/api/job/quantitysales', getQuantitySales);
+express.get('/api/job/impsales', getImportantSales);
 
 express.listen(4000,'localhost',()=>{
     console.log("running on port 4000")
